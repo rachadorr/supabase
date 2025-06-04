@@ -60,6 +60,16 @@
       if (!error) alert('Salvo com sucesso!');
       else alert('Erro ao salvar.');
     }
+
+    // Teste de conexão básica
+(async () => {
+  const { data, error } = await supabase.from('clientes').select('*').limit(1);
+  if (error) {
+    console.error('Erro ao conectar com Supabase:', error.message);
+  } else {
+    console.log('✅ Conectado com Supabase! Exemplo de dado:', data);
+  }
+})();
   </script>
 </body>
 </html>
