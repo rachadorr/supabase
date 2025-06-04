@@ -40,27 +40,49 @@
     }
 
     client.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        const { data: cliente, error } = await client
-          .from('clientes')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
+  if (session) {
+    const user = session.user;
 
-        if (error) {
-          console.error('Erro ao buscar dados:', error.message);
-          return;
-        }
+    let { data: cliente, error } = await client
+      .from('clientes')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
 
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('painel').style.display = 'block';
+    // Se não existe, cria automaticamente
+    if (!cliente && error) {
+      const { data: inserted, error: insertError } = await client
+        .from('clientes')
+        .insert([
+          {
+            user_id: user.id,
+            email: user.email,
+            nome: '',
+            telefone: '',
+            observacao: ''
+          }
+        ])
+        .select()
+        .single();
 
-        document.getElementById('nome').innerText = cliente.nome;
-        document.getElementById('email_view').innerText = cliente.email;
-        document.getElementById('telefone').innerText = cliente.telefone;
-        document.getElementById('observacao').value = cliente.observacao || '';
+      if (insertError) {
+        alert('Erro ao criar perfil: ' + insertError.message);
+        return;
       }
-    });
+
+      cliente = inserted;
+    }
+
+    // Mostrar dados no painel
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('painel').style.display = 'block';
+
+    document.getElementById('nome').innerText = cliente.nome;
+    document.getElementById('email_view').innerText = cliente.email;
+    document.getElementById('telefone').innerText = cliente.telefone;
+    document.getElementById('observacao').value = cliente.observacao || '';
+  }
+});
 
     async function salvar() {
       const obs = document.getElementById('observacao').value;
